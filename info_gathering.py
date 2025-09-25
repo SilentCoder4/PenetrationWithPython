@@ -13,4 +13,14 @@ args = argparse.parse_args()
 domain = args.domain
 ip = args.shodan
 
-
+# whois module
+print("[+] Getting whois info...")
+# using whois library, creating instance
+py = whois.query(domain)
+print("[+] whois info found.")
+print("Name: {}".format(py.name))
+print("Registrar: {}".format(py.registrar))
+print("Creation Date: {}".format(py.creation_date))
+print("Expiration date: {}". format(py.expiration_data))
+print("Registrant: {}".format(py.registrant))
+print("Registrant Country: {}".format(py.registrant_country))
