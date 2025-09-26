@@ -16,11 +16,32 @@ ip = args.shodan
 # whois module
 print("[+] Getting whois info...")
 # using whois library, creating instance
-py = whois.query(domain)
-print("[+] whois info found.")
-print("Name: {}".format(py.name))
-print("Registrar: {}".format(py.registrar))
-print("Creation Date: {}".format(py.creation_date))
-print("Expiration date: {}". format(py.expiration_data))
-print("Registrant: {}".format(py.registrant))
-print("Registrant Country: {}".format(py.registrant_country))
+try:
+
+    py = whois.whois(domain)
+    print("[+] whois info found.")
+
+    print("Name: {}".format(py.get('domain_name')))
+    print("Registrar: {}".format(py.get('registrar')))
+    print("Creation Date: {}".format(py.get('creation_date')))
+    print("Expiration date: {}". format(py.get('expiration_data')))
+    print("Registrant: {}".format(py.get('registrant')))
+    print("Registrant Country: {}".format(py.get('registrant_country')))
+except: pass
+
+
+#DNS Module
+print("[*] Getting DNS Info..")
+
+try:
+    for a in dns.resolver.resolve(domain, 'A'):
+        print("[*] A Record: {}",format(a.to.text()))
+    for ns in dns.resolver.resolve(domain, 'NS'):
+        print("[*] NS Record: {}",format(ns.to.text()))
+    for mx in dns.resolver.resolve(domain, 'MX'):
+        print("[*] MX Record: {}",format(mx.to.text()))
+    for txt in dns.resolver.resolve(domain, 'TXT'):
+        print("[*] TXT Record: {}",format(txt.to.text()))
+except:
+    pass
+# for post upgrade
