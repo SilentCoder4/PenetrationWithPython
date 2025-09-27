@@ -1,35 +1,37 @@
 import socket
-
 import whois
 import dns.resolver
 import shodan
 import requests
-import sys
 import argparse
 
 argparse = argparse.ArgumentParser(description="This is a basic information gathering tool.", usage="python3 info-gathering.py -d DOMAIN [ -s IP ]")
 argparse.add_argument("-d", "--domain",help="Enter the domain name for footpringting.")
 argparse.add_argument("-s", "--shodan",help="Enter the IP for shodan search.")
+argparse.add_argument("-o", "--output",help="Enter the filename.")
 
 args = argparse.parse_args()
 domain = args.domain
 ip = args.shodan
+output = args.output
 
 # whois module
 print("[+] Getting whois info...")
+whois_result = ''
 # using whois library, creating instance
 try:
 
     py = whois.whois(domain)
     print("[+] whois info found.")
 
-    print("Name: {}".format(py.get('domain_name')))
-    print("Registrar: {}".format(py.get('registrar')))
-    print("Creation Date: {}".format(py.get('creation_date')))
-    print("Expiration date: {}". format(py.get('expiration_data')))
-    print("Registrant: {}".format(py.get('registrant')))
-    print("Registrant Country: {}".format(py.get('registrant_country')))
-except: pass
+    whois_result += "Name: {}".format(py.get('domain_name')) + '\n'
+    whois_result += "Registrar: {}".format(py.get('registrar')) + '\n'
+    whois_result += "Creation Date: {}".format(py.get('creation_date')) + '\n'
+    whois_result += "Expiration date: {}". format(py.get('expiration_data')) + '\n'
+    whois_result += "Registrant: {}".format(py.get('registrant')) + '\n'
+    whois_result += "Registrant Country: {}".format(py.get('registrant_country')) + '\n'
+except:
+    print(whois_result)
 
 
 #DNS Module
