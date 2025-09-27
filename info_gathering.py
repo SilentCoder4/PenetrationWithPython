@@ -1,3 +1,5 @@
+import socket
+
 import whois
 import dns.resolver
 import shodan
@@ -45,3 +47,18 @@ try:
 except:
     pass
 # for post upgrade
+
+#geolocation
+print("[+] Getting geolocation info..")
+
+#implementing geolocation
+try:
+    response = requests.request('GET', "https://geolocation-db.com/json/" + socket.gethostbyname(domain)).json()
+    print("[+] Country: {}".format(response['country_name']))
+    print("[+] Lattitude: {}".format(response['lattitude']))
+    print("[+] Longitude: {}".format(response['longitude']))
+    print("[+] City: {}".format(response['city']))
+    print("[+] State: {}".format(response['state']))
+except:
+    pass
+
