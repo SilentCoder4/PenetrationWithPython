@@ -55,10 +55,23 @@ print("[+] Getting geolocation info..")
 try:
     response = requests.request('GET', "https://geolocation-db.com/json/" + socket.gethostbyname(domain)).json()
     print("[+] Country: {}".format(response['country_name']))
-    print("[+] Lattitude: {}".format(response['lattitude']))
+    print("[+] Latitude: {}".format(response['latitude']))
     print("[+] Longitude: {}".format(response['longitude']))
     print("[+] City: {}".format(response['city']))
     print("[+] State: {}".format(response['state']))
 except:
     pass
 
+#shodan
+if ip:
+    print("[+] Getting info form Shodan for IP {}".format(ip))
+    api = shodan.Shodan("CNnZxGru644po9z9WDtWx8GMJqnTNoCX")
+    try:
+        results = api.search(ip)
+        print("[+] Results found: {}".format(results['total']))
+        for result in results['matches']:
+            print("[+] IP: {}".format(result['ip_str']))
+            print("[+] Data: \n{}".format(result['data']))
+            print()
+    except:
+        print("[-] Shodan search error!!!")
