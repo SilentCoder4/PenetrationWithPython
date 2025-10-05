@@ -1,0 +1,20 @@
+[+] WHOIS Information
+Domain Name: GOOGLE.COM
+Registrar: MarkMonitor, Inc.
+Creation Date: 1997-09-15T04:00:00
+Expiration Date: 2028-09-14T04:00:00
+Registrant: Google LLC
+Country: US
+
+[+] DNS Records
+
+[+] Geolocation Information
+Resolved IP: 172.217.24.238
+Country: United States
+State: None
+City: None
+Latitude: 37.751
+Longitude: -97.822
+
+[+] Shodan Search for 192.168.1.1
+[-] SHODAN_API_KEY not set in environment

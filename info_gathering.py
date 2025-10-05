@@ -1,79 +1,100 @@
+#!/usr/bin/env python3
+import argparse
+import os
 import socket
 import whois
 import dns.resolver
 import shodan
 import requests
-import argparse
+from datetime import datetime
 
-argparse = argparse.ArgumentParser(description="This is a basic information gathering tool.", usage="python3 info-gathering.py -d DOMAIN [ -s IP ]")
-argparse.add_argument("-d", "--domain",help="Enter the domain name for footpringting.")
-argparse.add_argument("-s", "--shodan",help="Enter the IP for shodan search.")
-argparse.add_argument("-o", "--output",help="Enter the filename.")
+parser = argparse.ArgumentParser(description="Basic Information Gathering Tool", usage="python3 info-gathering.py -d DOMAIN [ -s IP ] -o filename.txt")
+parser.add_argument("-d", "--domain", required=True, help="Domain name for footprinting")
+parser.add_argument("-s", "--shodan", help="IP or query for Shodan search")
+parser.add_argument("-o", "--output", help="Output filename")
+args = parser.parse_args()
 
-args = argparse.parse_args()
-domain = args.domain
-ip = args.shodan
+domain = args.domain.strip()
+ip_query = args.shodan
 output = args.output
 
-# whois module
-print("[+] Getting whois info...")
-whois_result = ''
-# using whois library, creating instance
+result = ""
+
+# WHOIS Section
+result += "[+] WHOIS Information\n"
 try:
+    w = whois.whois(domain)
+    name = w.get('domain_name') or w.get('domain')
+    registrar = w.get('registrar')
+    creation = w.get('creation_date') or w.get('created')
+    if isinstance(creation, list):
+        creation = creation[0]
+    if isinstance(creation, datetime):
+        creation = creation.isoformat()
+    expiration = w.get('expiration_date') or w.get('expires')
+    if isinstance(expiration, list):
+        expiration = expiration[0]
+    if isinstance(expiration, datetime):
+        expiration = expiration.isoformat()
+    registrant = w.get('registrant') or w.get('org')
+    country = w.get('registrant_country') or w.get('country')
 
-    py = whois.whois(domain)
-    print("[+] whois info found.")
+    result += f"Domain Name: {name}\nRegistrar: {registrar}\nCreation Date: {creation}\nExpiration Date: {expiration}\nRegistrant: {registrant}\nCountry: {country}\n"
+except Exception as e:
+    result += f"[-] WHOIS Error: {e}\n"
 
-    whois_result += "Name: {}".format(py.get('domain_name')) + '\n'
-    whois_result += "Registrar: {}".format(py.get('registrar')) + '\n'
-    whois_result += "Creation Date: {}".format(py.get('creation_date')) + '\n'
-    whois_result += "Expiration date: {}". format(py.get('expiration_data')) + '\n'
-    whois_result += "Registrant: {}".format(py.get('registrant')) + '\n'
-    whois_result += "Registrant Country: {}".format(py.get('registrant_country')) + '\n'
-except:
-    print(whois_result)
-
-
-#DNS Module
-print("[*] Getting DNS Info..")
-
+# DNS Section
+result += "\n[+] DNS Records\n"
 try:
-    for a in dns.resolver.resolve(domain, 'A'):
-        print("[*] A Record: {}",format(a.to.text()))
-    for ns in dns.resolver.resolve(domain, 'NS'):
-        print("[*] NS Record: {}",format(ns.to.text()))
-    for mx in dns.resolver.resolve(domain, 'MX'):
-        print("[*] MX Record: {}",format(mx.to.text()))
-    for txt in dns.resolver.resolve(domain, 'TXT'):
-        print("[*] TXT Record: {}",format(txt.to.text()))
-except:
-    pass
-# for post upgrade
+    types = ["A", "AAAA", "NS", "MX", "TXT", "CNAME", "SOA"]
+    for t in types:
+        try:
+            answers = dns.resolver.resolve(domain, t, lifetime=5)
+            for r in answers:
+                result += f"[*] {t} Record: {r.to_text()}\n"
+        except:
+            pass
+except Exception as e:
+    result += f"[-] DNS Error: {e}\n"
 
-#geolocation
-print("[+] Getting geolocation info..")
-
-#implementing geolocation
+# GEOLOCATION Section
+result += "\n[+] Geolocation Information\n"
 try:
-    response = requests.request('GET', "https://geolocation-db.com/json/" + socket.gethostbyname(domain)).json()
-    print("[+] Country: {}".format(response['country_name']))
-    print("[+] Latitude: {}".format(response['latitude']))
-    print("[+] Longitude: {}".format(response['longitude']))
-    print("[+] City: {}".format(response['city']))
-    print("[+] State: {}".format(response['state']))
-except:
-    pass
+    ip = socket.gethostbyname(domain)
+    result += f"Resolved IP: {ip}\n"
+    geo = requests.get(f"https://geolocation-db.com/json/{ip}&position=true", timeout=6).json()
+    result += f"Country: {geo.get('country_name')}\nState: {geo.get('state')}\nCity: {geo.get('city')}\nLatitude: {geo.get('latitude')}\nLongitude: {geo.get('longitude')}\n"
+except Exception as e:
+    result += f"[-] Geolocation Error: {e}\n"
 
-#shodan
-if ip:
-    print("[+] Getting info form Shodan for IP {}".format(ip))
-    api = shodan.Shodan("CNnZxGru644po9z9WDtWx8GMJqnTNoCX")
+# SHODAN Section
+if ip_query:
+    result += f"\n[+] Shodan Search for {ip_query}\n"
     try:
-        results = api.search(ip)
-        print("[+] Results found: {}".format(results['total']))
-        for result in results['matches']:
-            print("[+] IP: {}".format(result['ip_str']))
-            print("[+] Data: \n{}".format(result['data']))
-            print()
-    except:
-        print("[-] Shodan search error!!!")
+        key = os.environ.get("CNnZxGru644po9z9WDtWx8GMJqnTNoCX")
+        if not key:
+            result += "[-] SHODAN_API_KEY not set in environment\n"
+        else:
+            api = shodan.Shodan(key)
+            try:
+                data = api.search(ip_query)
+                result += f"Results Found: {data.get('total', 0)}\n"
+                for item in data.get('matches', []):
+                    result += f"IP: {item.get('ip_str')}\nPort: {item.get('port')}\nData:\n{item.get('data')}\n{'-'*40}\n"
+            except shodan.APIError:
+                host = api.host(ip_query)
+                result += f"IP: {host.get('ip_str')}\n"
+                for s in host.get('data', []):
+                    result += f"Port: {s.get('port')}\n{s.get('data')}\n{'-'*40}\n"
+    except Exception as e:
+        result += f"[-] Shodan Error: {e}\n"
+
+print(result)
+
+if output:
+    try:
+        with open(output, "w", encoding="utf-8") as f:
+            f.write(result)
+        print(f"[+] Results written to {output}")
+    except Exception as e:
+        print(f"[-] Failed to write output: {e}")
