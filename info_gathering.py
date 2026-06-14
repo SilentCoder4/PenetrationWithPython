@@ -71,7 +71,7 @@ except Exception as e:
 if ip_query:
     result += f"\n[+] Shodan Search for {ip_query}\n"
     try:
-        key = os.environ.get("CNnZxGru644po9z9WDtWx8GMJqnTNoCX")
+        key = os.environ.get("CNnZxGru644po9z9WjdnfndskfsandifX")
         if not key:
             result += "[-] SHODAN_API_KEY not set in environment\n"
         else:
